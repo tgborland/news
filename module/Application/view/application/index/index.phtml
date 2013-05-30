@@ -1,12 +1,33 @@
 <div class="hero-unit">
-    <h1><?php echo sprintf($this->translate('Welcome to %sZend Framework 2%s'), '<span class="zf-green">', '</span>') ?></h1>
+
+    <h1>Новости</h1>
+
+    <!--
     <p><?php echo sprintf($this->translate('Congratulations! You have successfully installed the %sZF2 Skeleton Application%s. You are currently running Zend Framework version %s. This skeleton can serve as a simple starting point for you to begin building your application on ZF2.'), '<a href="https://github.com/zendframework/ZendSkeletonApplication" target="_blank">', '</a>', \Zend\Version\Version::VERSION) ?></p>
     <p><a class="btn btn-success btn-large" href="https://github.com/zendframework/zf2" target="_blank"><?php echo $this->translate('Fork Zend Framework 2 on GitHub') ?> &raquo;</a></p>
+    -->
+
 </div>
 
-<div class="row">
+<? foreach($news as $item): ?>
+<div>
+    <h2><? echo $item['title'] ?></h2>
+    <p><? echo $item['body'] ?></p>
+    <? if (count($item['tags'])): ?>
+        <p><b>Теги:</b> <? echo implode(', ', $item['tags']) ?></p>
+    <? endif; ?>
+    <hr>
+    <!-- <p><a class="btn btn-success" href="http://framework.zend.com/zf2" target="_blank"><?php echo $this->translate('ZF2 Development Portal') ?> &raquo;</a></p> -->
+</div>
+<? endforeach; ?>
 
-    <? echo $this->vars; ?>
+
+<?php echo $this->paginationControl($this->paginator,
+                                    'Sliding',
+                                    'news-paginator', array('route' => 'application/paginator'));  ?>
+
+<!--
+<div class="row">
 
     <div class="span4">
         <h2><?php echo $this->translate('Follow Development') ?></h2>
@@ -26,3 +47,5 @@
        <p><a class="btn btn-success" href="http://webchat.freenode.net?channels=zftalk" target="_blank"><?php echo $this->translate('Ping us on IRC') ?> &raquo;</a></p>
    </div>
 </div>
+
+-->

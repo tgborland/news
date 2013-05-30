@@ -10,21 +10,35 @@
 namespace Application\Controller;
 
 use Zend\Mvc\Controller\AbstractActionController;
+use Zend\Paginator\Paginator;
 use Zend\View\Model\ViewModel;
 
 class IndexController extends AbstractActionController {
+    protected $_pageSize = 5;
+
     public function indexAction() {
+        $page = $this->params()->fromQuery('page', 1);
 
         $mongo = new \MongoClient();
-        $db = $mongo->test;
-        $collection = $db->test;
+        $db = $mongo->news;
+        $collection = $db->news;
 
         $cursor = $collection->find();
+        $cursor->skip($this->_pageSize * ($page - 1));
+        $cursor->limit($this->_pageSize);
 
-        foreach ($cursor as $item) {
-            var_dump($item);
-        }
+        $paginator = new Paginator(new \Zend\Paginator\Adapter\Null($cursor->count()));
+        $paginator->setCurrentPageNumber($page)
+            ->setItemCountPerPage($this->_pageSize);
+//            ->setPageRange(7);
 
-        return new ViewModel(array('test' => 'test123'));
+        $view = new ViewModel(array(
+            'news' => $cursor,
+            'paginator' => $paginator)
+        );
+
+        // $view->setTerminal(true); // for partial render
+
+        return $view;
     }
 }

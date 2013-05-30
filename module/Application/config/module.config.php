@@ -10,16 +10,7 @@
 return array(
     'router' => array(
         'routes' => array(
-            'home' => array(
-                'type' => 'Zend\Mvc\Router\Http\Literal',
-                'options' => array(
-                    'route'    => '/',
-                    'defaults' => array(
-                        'controller' => 'Application\Controller\Index',
-                        'action'     => 'index',
-                    ),
-                ),
-            ),
+
             // The following is a route to simplify getting started creating
             // new controllers and actions without needing to create a new
             // module. Simply drop new controllers in, and you can access them
@@ -49,6 +40,31 @@ return array(
                         ),
                     ),
                 ),
+            ),
+
+            'home' => array(
+                'type'    => 'segment',
+                'options' => array(
+                    'route'    => '/',
+                    'constraints' => array(
+                        //'action' => '[a-zA-Z][a-zA-Z0-9_-]*',
+                        //'page' => '[0-9]+'
+                    ),
+                    'defaults' => array(
+                        'controller' => 'Application\Controller\Index',
+                        'action'     => 'index',
+                    ),
+                ),
+                'may_terminate' => true,
+                'child_routes' => array(
+                    'query' => array(
+                        'type' => 'Query',
+                        'options' => array(
+                            //'route' => '?[page=:page]'
+                        ),
+                    ),
+                ),
+
             ),
         ),
     ),
@@ -87,6 +103,7 @@ return array(
             'application/index/index' => __DIR__ . '/../view/application/index/index.phtml',
             'error/404'               => __DIR__ . '/../view/error/404.phtml',
             'error/index'             => __DIR__ . '/../view/error/index.phtml',
+            'news-paginator'          => __DIR__ . '/../view/application/index/pagination_control.phtml',
         ),
         'template_path_stack' => array(
             __DIR__ . '/../view',
