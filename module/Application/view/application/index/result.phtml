@@ -1,0 +1,26 @@
+<? foreach($this->news['items'] as $item): ?>
+<div>
+    <table style="padding: 0; margin: 0;">
+        <tr>
+            <td>
+                <h2><? echo $item['title'] ?></h2>
+                <p><? echo $item['body'] ?></p>
+                <? if (count($item['tags'])): ?>
+                    <p><b>Теги:</b> <? echo implode(', ', $item['tags']) ?></p>
+                <? endif; ?>
+            </td>
+            <td style="width: 1%;">
+                <input type="button" value="удалить" onclick="news.delete('<? echo $item['_id']; ?>')">
+            </td>
+        </tr>
+    </table>
+    <hr>
+    <!-- <p><a class="btn btn-success" href="http://framework.zend.com/zf2" target="_blank"><?php echo $this->translate('ZF2 Development Portal') ?> &raquo;</a></p> -->
+</div>
+<? endforeach; ?>
+
+
+<?php echo $this->paginationControl($this->news['paginator'],
+    'Sliding',
+    'news-paginator', array('route' => 'application/paginator'));
+?>

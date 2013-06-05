@@ -1,0 +1,27 @@
+<script type="text/javascript"> <!--
+
+    $(document).ready(function(){
+        $('.news-form').submit(function(){
+            news.save($(this).serialize());
+
+            return false;
+        });
+    });
+
+-->
+</script>
+
+<?
+    $form = $this->form;
+    $form->prepare();
+
+
+    //$form->setAttribute('method', 'get');
+
+    echo $this->form()->openTag($form);
+    echo $this->formLabel($form->get('title')) . $this->formText($form->get('title'));
+    echo $this->formLabel($form->get('body')) . $this->formTextarea($form->get('body')) . '<br>';
+    echo $this->formSubmit($form->get('submit'));
+    echo $this->form()->closeTag();
+
+?>

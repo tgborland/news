@@ -45,10 +45,9 @@ return array(
             'home' => array(
                 'type'    => 'segment',
                 'options' => array(
-                    'route'    => '/',
+                    'route'    => '/[:action]',
                     'constraints' => array(
-                        //'action' => '[a-zA-Z][a-zA-Z0-9_-]*',
-                        //'page' => '[0-9]+'
+                        'action' => '[a-zA-Z][a-zA-Z0-9_-]*',
                     ),
                     'defaults' => array(
                         'controller' => 'Application\Controller\Index',
@@ -104,6 +103,8 @@ return array(
             'error/404'               => __DIR__ . '/../view/error/404.phtml',
             'error/index'             => __DIR__ . '/../view/error/index.phtml',
             'news-paginator'          => __DIR__ . '/../view/application/index/pagination_control.phtml',
+            'news-result'             => __DIR__ . '/../view/application/index/result.phtml',
+            'news-form'             => __DIR__ . '/../view/application/index/news_form.phtml',
         ),
         'template_path_stack' => array(
             __DIR__ . '/../view',

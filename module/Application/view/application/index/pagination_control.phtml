@@ -2,24 +2,24 @@
     <div class="pagination pagination-centered">
         <ul>
             <li <?php echo!isset($this->previous) ? 'class="disabled"' : ''; ?>>
-                <a href="<?php echo $this->url('home/query', array('page' => $this->first)); ?>">&laquo;</a></li>
+                <a href="javascript:news.load(<?php echo $this->first ?>)">&laquo;</a></li>
             <li <?php echo!isset($this->previous) ? 'class="disabled"' : ''; ?>>
-                <a href="<?php echo $this->url('home/query', array('page' => $this->previous)); ?>">&lsaquo;</a></li>
+                <a href="javascript:news.load(<?php echo $this->previous ?>)">&lsaquo;</a></li>
 
 
             <!-- Numbered page links -->
             <?php foreach ($this->pagesInRange as $page): ?>
-                <li <?php echo $page == $this->current ? 'class="active"' : ''; ?>><a href="<?php echo $this->url('home/query', array('page' => $page)); ?>">
+                <li <?php echo $page == $this->current ? 'class="active"' : ''; ?>><a href="javascript:news.load(<?php echo $page ?>)">
                         <?php echo $page; ?>
                     </a></li>
             <?php endforeach; ?>
 
             <!-- Next page link -->
             <li <?php echo!isset($this->next) ? 'class="disabled"' : ''; ?>>
-                <a href="<?php echo $this->url('home/query', array('page' => $this->next)); ?>">&rsaquo;</a></li>
+                <a href="javascript:news.load(<?php echo $this->next ?>)">&rsaquo;</a></li>
             <!-- Last page link -->
             <li <?php echo!isset($this->next) ? 'class="disabled"' : ''; ?>>
-                <a href="<?php echo $this->url('home/query', array( 'page' => $this->last)); ?>">&raquo;</a></li>
+                <a href="javascript:news.load(<?php echo $this->last ?>)">&raquo;</a></li>
         </ul>
     </div>
 <?php endif; ?>
