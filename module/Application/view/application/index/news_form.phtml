@@ -1,26 +1,16 @@
-<script type="text/javascript"> <!--
-
-    $(document).ready(function(){
-        $('.news-form').submit(function(){
-            news.save($(this).serialize());
-
-            return false;
-        });
-    });
-
--->
-</script>
-
 <?
     $form = $this->form;
     $form->prepare();
 
 
     //$form->setAttribute('method', 'get');
+    //$form->get('submit')->setAttribute('onclick', 'news.save($(this).parent().serialize()); return false;');
 
     echo $this->form()->openTag($form);
+    echo $this->formHidden($form->get('_id'));
     echo $this->formLabel($form->get('title')) . $this->formText($form->get('title'));
     echo $this->formLabel($form->get('body')) . $this->formTextarea($form->get('body')) . '<br>';
+    echo $this->formLabel($form->get('tags')) . $this->formText($form->get('tags')) . '<br>';
     echo $this->formSubmit($form->get('submit'));
     echo $this->form()->closeTag();
 

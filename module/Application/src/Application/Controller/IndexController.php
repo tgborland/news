@@ -14,6 +14,7 @@ use Zend\Mvc\Controller\AbstractActionController;
 use Zend\Paginator\Paginator;
 use Zend\View\Model\JsonModel;
 use Zend\View\Model\ViewModel;
+use Zend\Form;
 
 class IndexController extends AbstractActionController {
     protected $_pageSize = 5;
@@ -23,6 +24,8 @@ class IndexController extends AbstractActionController {
      */
     protected function _getNewsActionData() {
         $page = $this->params()->fromQuery('page', 1);
+        $items = array();
+        $tagIds = array();
 
         $mongo = new \MongoClient();
         $db = $mongo->news;
@@ -32,16 +35,56 @@ class IndexController extends AbstractActionController {
         $cursor->skip($this->_pageSize * ($page - 1));
         $cursor->limit($this->_pageSize);
 
+        foreach($cursor as $item) {
+            if (!empty($item['tags']) && is_array($item['tags'])) {
+                foreach($item['tags'] as &$tag) {
+                    if ($tag = $db->tags->getDBRef($tag)) {
+                        $tag = $tag['name'];
+                    }
+                }
+            }
+
+            $items[] = $item;
+        }
+
         $paginator = new Paginator(new \Zend\Paginator\Adapter\Null($cursor->count()));
         $paginator->setCurrentPageNumber($page)
             ->setItemCountPerPage($this->_pageSize);
 
         return array(
-            'items' => $cursor,
+            'items' => $items,
             'paginator' => $paginator
         );
     }
 
+    /**
+     * @param $tags
+     */
+    protected function _prepareTags(&$tags) {
+        $mongo = new \MongoClient();
+        $db = $mongo->news;
+        $collection = $db->tags;
+        $existTags = array();
+
+        $cursor = $collection->find(array('name' => array('$in' => $tags)));
+        foreach ($cursor as $tag) {
+            $existTags[] = $tag['name'];
+        }
+
+        $addTags = array_diff($tags, $existTags);
+        foreach ($addTags as $tag) {
+            $result = $collection->insert(array('name' => $tag));
+        }
+
+        foreach ($tags as &$tag) {
+            $el = $collection->findOne(array('name' => $tag));
+            $tag = $collection->createDBRef($el);
+        }
+    }
+
+    /**
+     * @return array|ViewModel
+     */
     public function indexAction() {
         $form = new NewsForm();
 
@@ -53,18 +96,28 @@ class IndexController extends AbstractActionController {
         return $view;
     }
 
+    /**
+     * @return ViewModel
+     */
     public function resultAction() {
+        $form = new NewsForm();
+
         $view = new ViewModel(array(
-            'news' => $this->_getNewsActionData()
+            'news' => $this->_getNewsActionData(),
+            'form' => $form
         ));
 
         $view->setTerminal(true); // for partial render
         return $view;
     }
 
+    /**
+     *
+     */
     public function saveAction() {
         $form = new NewsForm();
         $form->setData($this->getRequest()->getQuery());
+        $id = $this->params()->fromQuery('_id', false);
 
         $result = array();
 
@@ -73,10 +126,18 @@ class IndexController extends AbstractActionController {
 
             $mongo = new \MongoClient();
             $db = $mongo->news;
-            $collection = $db->news;
+            $news = $db->news;
 
-            if ($collection->insert($data)) {
-                $result['ok'] = 1;
+            $this->_prepareTags($data['tags']);
+
+            if ($id) {
+                if ($news->update(array('_id' => new \MongoId($id)), $data)) {
+                    $result['ok'] = 1;
+                }
+            } else {
+                if ($news->insert($data)) {
+                    $result['ok'] = 1;
+                }
             }
         }
 
@@ -84,6 +145,9 @@ class IndexController extends AbstractActionController {
         exit;
     }
 
+    /**
+     *
+     */
     public function deleteAction() {
         $result = array();
         $id = $this->params()->fromQuery('id', false);

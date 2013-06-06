@@ -1,20 +1,24 @@
-<?php $this->headScript()->prependFile($this->basePath() . '/js/news.js') ?>
+<?php $this->headScript()->prependFile($this->basePath() . '/js/init.js')->prependFile($this->basePath() . '/js/news.js') ?>
+
+<div class="hero-unit" style="padding: 20px; right: 20px; position: fixed; float: right;">
+<h4>Добавить новость:</h4>
+<?php
+    echo $this->partial('news-form', array(
+        'form' => $this->form
+    ));
+?>
+</div>
+
 
 <div class="hero-unit">
-
     <h1>Новости</h1>
-
-    <?php
-        echo $this->partial('news-form', array(
-            'form' => $this->form
-        ));
-    ?>
 </div>
 
 <div id="news-container">
     <?php
         echo $this->partial('news-result', array(
-            'news' => $news
+            'news' => $news,
+            'form' => $this->form
         ));
     ?>
 </div>

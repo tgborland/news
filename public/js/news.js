@@ -20,7 +20,7 @@ var news = new function() {
     this.save = function(params) {
         $.get('/save?' + params, {}, function(data){
             if (data['ok'] == "1") {
-                news.load(1);
+                news.load(_page);
             }
         }, "json")
         .fail(function() { alert("ошибка сохранения новости"); })
@@ -29,7 +29,7 @@ var news = new function() {
     this.delete = function(id) {
         $.get('/delete', {id: id}, function(data){
             if (data['ok'] == "1") {
-                news.load(1);
+                news.load(_page);
             }
         }, "json")
         .fail(function() { alert("ошибка удаления новости"); })

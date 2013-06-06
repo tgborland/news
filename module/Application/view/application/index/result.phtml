@@ -2,15 +2,23 @@
 <div>
     <table style="padding: 0; margin: 0;">
         <tr>
-            <td>
+            <td class="news-view">
                 <h2><? echo $item['title'] ?></h2>
                 <p><? echo $item['body'] ?></p>
                 <? if (count($item['tags'])): ?>
                     <p><b>Теги:</b> <? echo implode(', ', $item['tags']) ?></p>
                 <? endif; ?>
             </td>
+            <td class="news-edit" style="display: none;">
+                <?php
+                    echo $this->partial('news-form', array(
+                        'form' => $this->form->setData($item)->setName($item['_id'])
+                    ));
+                ?>
+            </td>
             <td style="width: 1%;">
-                <input type="button" value="удалить" onclick="news.delete('<? echo $item['_id']; ?>')">
+                <input class="news-edit" type="button" value="редактировать" style="width: 150px;">
+                <input type="button" value="удалить" style="width: 150px; color: red;" onclick="news.delete('<? echo $item['_id']; ?>')">
             </td>
         </tr>
     </table>
