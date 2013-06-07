@@ -54,16 +54,6 @@ return array(
                         'action'     => 'index',
                     ),
                 ),
-                'may_terminate' => true,
-                'child_routes' => array(
-                    'query' => array(
-                        'type' => 'Query',
-                        'options' => array(
-                            //'route' => '?[page=:page]'
-                        ),
-                    ),
-                ),
-
             ),
         ),
     ),
