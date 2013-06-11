@@ -1,8 +1,15 @@
+<script type="text/javascript"> <!--
+    news.init();
+
+-->
+</script>
+
 <? foreach($this->news['items'] as $item): ?>
 <div>
     <table style="padding: 0; margin: 0;">
         <tr>
             <td class="news-view">
+                <input type="hidden" class="news-id" value="<? echo $item['_id']; ?>">
                 <h2><? echo $item['title'] ?></h2>
                 <p><? echo $item['body'] ?></p>
                 <? if (count($item['tags'])): ?>
@@ -17,8 +24,8 @@
                 ?>
             </td>
             <td style="width: 1%;">
-                <input class="news-edit" type="button" value="редактировать" style="width: 150px;">
-                <input type="button" value="удалить" style="width: 150px; color: red;" onclick="news.delete('<? echo $item['_id']; ?>')">
+                <div class="edit-button" style="margin-bottom: 3px;"></div>
+                <div class="delete-button"></div>
             </td>
         </tr>
     </table>

@@ -111,6 +111,12 @@ class IndexController extends AbstractActionController {
         return $view;
     }
 
+    public function resultJsonAction() {
+        $result = $this->_getNewsActionData();
+        echo json_encode($result['items']);
+        exit;
+    }
+
     /**
      *
      */
