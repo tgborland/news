@@ -8,30 +8,112 @@
  * Create a new Feed Detail
  * @param {Object} config The config object
  */
+var required = '<span style="color:red;font-weight:bold" data-qtip="Required">*</span>';
+
 Ext.define('FeedViewer.FeedDetail', {
 
     extend: 'Ext.panel.Panel',
     alias: 'widget.feeddetail',
 
     border: false,
+
+    newsForm: false,
+    newsWindow: false,
     
     initComponent: function(){
-        // this.display = Ext.create('widget.feedpost', {});
         Ext.apply(this, {
             layout: 'border',
-            items: [this.createGrid() /*, this.createSouth(), this.createEast()*/]
+            items: [this.createGrid()]
         });
-        // this.relayEvents(this.display, ['opentab']);
-        // this.relayEvents(this.grid, ['rowdblclick']);
-        this.callParent(arguments);
-    },
 
-    /**
-     * Loads a feed.
-     * @param {String} url
-     */
-    loadFeed: function(url){
-        this.grid.loadFeed(url);
+        this.newsForm = Ext.createWidget('form', {
+            layout: {
+                type: 'vbox',
+                align: 'stretch'
+            },
+            border: false,
+            bodyPadding: 10,
+
+            fieldDefaults: {
+                labelAlign: 'top',
+                labelWidth: 100,
+                labelStyle: 'font-weight:bold'
+            },
+            items: [
+            {
+                xtype: 'hiddenfield',
+                name: '_id',
+                allowBlank: true
+            },
+            {
+                xtype: 'textfield',
+                name: 'title',
+                fieldLabel: 'Название',
+                afterLabelTextTpl: required,
+                allowBlank: false
+            }, {
+                xtype: 'textareafield',
+                name: 'body',
+                fieldLabel: 'Текст новости',
+                labelAlign: 'top',
+                flex: 1,
+                margins: '0',
+                afterLabelTextTpl: required,
+                allowBlank: false
+            }, {
+                xtype: 'textfield',
+                name: 'tags',
+                fieldLabel: 'Теги (через запятую)',
+                allowBlank: true
+            }],
+
+            buttons: [{
+                text: 'Отмена',
+                handler: function() {
+                    this.up('form').getForm().reset();
+                    this.up('window').hide();
+                }
+            }, {
+                text: 'Сохранить',
+                handler: function() {
+                    var form = this.up('form').getForm();
+                    var window = this.up('window');
+
+                    if (form.isValid()) {
+                        $.post('/save', form.getValues(), function(data){
+                            if (data['ok'] == "1") {
+                                form.reset();
+                                window.hide();
+                                window.panel.grid.getStore().load();
+                                window.panel.refreshTags();
+                            } else {
+                                Ext.MessageBox.alert("Ошибка", "Ошибка сохранения новости");
+                            }
+                        }, "json")
+                        .fail(function() {
+                            Ext.MessageBox.alert("Ошибка", "Ошибка сохранения новости");
+                        });
+                    }
+                }
+            }]
+        });
+
+        this.newsWindow = Ext.widget('window', {
+            panel: this,
+            title: 'Редактирование новости',
+            closeAction: 'hide',
+            width: 400,
+            height: 400,
+            minWidth: 300,
+            minHeight: 300,
+            layout: 'fit',
+            resizable: true,
+            modal: true,
+            items: this.newsForm,
+            defaultFocus: 'title'
+        });
+
+        this.callParent(arguments);
     },
 
     /**
@@ -42,7 +124,7 @@ Ext.define('FeedViewer.FeedDetail', {
     createGrid: function(){
         this.grid = Ext.create('widget.feedgrid', {
             region: 'center',
-            dockedItems: [this.createTopToolbar()],
+            dockedItems: [this.createTopToolbar(), this.createTagsToolbar()],
             flex: 2,
             minHeight: 200,
             minWidth: 150,
@@ -51,7 +133,6 @@ Ext.define('FeedViewer.FeedDetail', {
                 select: this.onSelect
             }
         });
-        this.loadFeed(this.url);
         return this.grid;
     },
 
@@ -73,126 +154,132 @@ Ext.define('FeedViewer.FeedDetail', {
     createTopToolbar: function(){
         this.toolbar = Ext.create('widget.toolbar', {
             cls: 'x-docked-noborder-top',
-            items: [{
-                iconCls: 'open-all',
-                text: 'Open All',
+            items: [
+            {
+                text: 'Добавить',
                 scope: this,
-                handler: this.onOpenAllClick
-            }, '-', {
-                xtype: 'cycle',
-                text: 'Reading Pane',
-                prependText: 'Preview: ',
-                showText: true,
+                handler: this.onNew,
+                icon: '/img/add.gif'
+            },
+            {
+                text: 'Редактировать',
                 scope: this,
-                changeHandler: this.readingPaneChange,
-                menu: {
-                    id: 'reading-menu',
-                    items: [{
-                        text: 'Bottom',
-                        checked: true,
-                        iconCls:'preview-bottom'
-                    }, {
-                        text: 'Right',
-                        iconCls:'preview-right'
-                    }, {
-                        text: 'Hide',
-                        iconCls:'preview-hide'
-                    }]
-                }
-            }, {
-                iconCls: 'summary',
-                text: 'Summary',
-                enableToggle: true,
-                pressed: true,
+                handler: this.onEdit,
+                icon: '/img/edit.gif'
+            },
+            {
+                text: 'Удалить',
                 scope: this,
-                toggleHandler: this.onSummaryToggle
+                handler: this.onDelete,
+                icon: '/img/delete.gif'
             }]
         });
         return this.toolbar;
+    },
+
+    createTagsToolbar: function(){
+        this.tagsToolbar = Ext.create('widget.toolbar', {
+            //cls: 'x-docked-noborder-top',
+            panel: this,
+            prependText: 'Фильтровать по тегам',
+            items: [{
+                xtype: 'text',
+                text: 'Фильтр по тегам:',
+                scope: this,
+                height: 19
+            }]
+        });
+
+        this.refreshTags();
+
+        return this.tagsToolbar;
+    },
+
+    refreshTags: function() {
+        var tagsToolbar = this.tagsToolbar;
+        var panel = this;
+
+        for (var i=1; i<tagsToolbar.items.length; i++) {
+            tagsToolbar.remove(1);
+        }
+
+        $.get('/tags', {}, function(data){
+            if (data) {
+                for (var i=0; i<data.length; i++) {
+                    tagsToolbar.add({
+                        text: data[i],
+                        enableToggle: true,
+                        scope: this,
+                        toggleHandler: panel.onTagSelected
+                    });
+                }
+            }
+
+        }, 'json').fail(function() {
+            Ext.MessageBox.alert("Ошибка", "Ошибка обновления тегов");
+        });
+
+    },
+
+    onTagSelected: function(button, state){
+        var tags = [];
+        tagsToolbar = button.ownerCt;
+
+        for (var i=1; i<tagsToolbar.items.length; i++) {
+            el = tagsToolbar.items.get(i);
+            if (el.pressed) {
+                tags.push(tagsToolbar.items.get(i).getText());
+            }
+        }
+
+        tagsToolbar.panel.grid.store.load({params: {'tags[]': tags}});
+    },
+
+    /**
+     *
+     */
+    onNew: function(){
+        this.newsWindow.show();
+    },
+
+    /**
+     *
+     */
+    onEdit: function(){
+        var record = this.grid.getSelectionModel().getSelection();
+        var selected = record[0];
+
+        if (selected) {
+            this.newsForm.loadRecord(selected);
+            this.newsWindow.show();
+        }
     },
 
     /**
      * Reacts to the open all being clicked
      * @private
      */
-    onOpenAllClick: function(){
-        this.fireEvent('openall', this);
-    },
+    onDelete: function(){
+        var grid = this.grid;
+        var record = grid.getSelectionModel().getSelection();
+        var selected = record[0];
 
-    /**
-     * Gets a list of titles/urls for each feed.
-     * @return {Array} The feed details
-     */
-    getFeedData: function(){
-        return this.grid.store.getRange();
-    },
+        grid.disable();
+        if (selected) {
+            var id = selected.data._id;
 
-    /**
-     * @private
-     * @param {Ext.button.Button} button The button
-     * @param {Boolean} pressed Whether the button is pressed
-     */
-    onSummaryToggle: function(btn, pressed) {
-        this.grid.getComponent('view').getPlugin('preview').toggleExpanded(pressed);
-    },
-
-    /**
-     * Handle the checked item being changed
-     * @private
-     * @param {Ext.menu.CheckItem} item The checked item
-     */
-    readingPaneChange: function(cycle, activeItem){
-        switch (activeItem.text) {
-            case 'Bottom':
-                this.east.hide();
-                this.south.show();
-                this.south.add(this.display);
-                break;
-            case 'Right':
-                this.south.hide();
-                this.east.show();
-                this.east.add(this.display);
-                break;
-            default:
-                this.south.hide();
-                this.east.hide();
-                break;
+            $.get('/delete', {id: id}, function(data){
+                if (data['ok'] == "1") {
+                    grid.getStore().remove(record);
+                    grid.enable();
+                    grid.getStore().load();
+                }
+            }, "json")
+            .fail(function() {
+                Ext.MessageBox.alert('Ошибка', "Ошибка удаления новости", function(){
+                    grid.enable();
+                });
+            });
         }
-    },
-
-    /**
-     * Create the south region container
-     * @private
-     * @return {Ext.panel.Panel} south
-     */
-    createSouth: function(){
-        this.south =  Ext.create('Ext.panel.Panel', {
-            layout: 'fit',
-            region: 'south',
-            border: false,
-            split: true,
-            flex: 2,
-            minHeight: 150,
-            // items: this.display
-        });
-        return this.south;
-    },
-
-    /**
-     * Create the east region container
-     * @private
-     * @return {Ext.panel.Panel} east
-     */
-    createEast: function(){
-        this.east =  Ext.create('Ext.panel.Panel', {
-            layout: 'fit',
-            region: 'east',
-            flex: 1,
-            split: true,
-            hidden: true,
-            minWidth: 150,
-            border: false
-        });
-        return this.east;
     }
 });
