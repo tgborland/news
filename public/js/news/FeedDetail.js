@@ -199,9 +199,13 @@ Ext.define('FeedViewer.FeedDetail', {
         var tagsToolbar = this.tagsToolbar;
         var panel = this;
 
-        for (var i=1; i<tagsToolbar.items.length; i++) {
-            tagsToolbar.remove(1);
-        }
+        tagsToolbar.removeAll();
+        tagsToolbar.add({
+            xtype: 'text',
+            text: 'Фильтр по тегам:',
+            scope: this,
+            height: 19
+        });
 
         $.get('/tags', {}, function(data){
             if (data) {
